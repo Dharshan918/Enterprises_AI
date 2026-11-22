@@ -8,13 +8,14 @@ BASE_DIR = Path(__file__).resolve().parents[2]
 class Settings(BaseSettings):
     app_name: str = "Enterprise HR Policy Agentic RAG Copilot"
     app_env: str = "development"
-    openai_api_key: str = ""
+    groq_api_key: str = ""
+    # openai_api_key: str = ""
     tavily_api_key: str = ""
     pinecone_api_key: str = ""
     pinecone_index_name: str = "fde-hr-policy-rag"
     pinecone_namespace: str = "company-hr-kb"
     embedding_model: str = "sentence-transformers/all-MiniLM-L6-v2"
-    openai_model: str = "gpt-4o-mini"
+    groq_model: str = "openai/gpt-oss-120b"
     top_k: int = 4
     max_retries: int = 1
     admin_api_key: str = "change-me-in-production"
