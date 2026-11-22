@@ -1,21 +1,20 @@
 import time
-from pinecone import Pinecone , ServerlessSpec
-from langchain_openai import OpenAIEmbeddings
+from pinecone import Pinecone, ServerlessSpec
+from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_pinecone import PineconeVectorStore
 from app.core.config import get_settings
 
 settings = get_settings()
 
-
 _embeddings = None
 _vectorstore = None
-
 
 EMBEDDING_DIMENSIONS = {
     "text-embedding-3-small": 1536,
     "text-embedding-3-large": 3072,
     "text-embedding-ada-002": 1536,
     "all-minilm-l6-v2": 384,
+    "sentence-transformers/all-minilm-l6-v2": 384,
 }
 
 
@@ -40,18 +39,14 @@ def get_embedding_dimension(model_name: str | None = None) -> int:
     )
 
 
-
 def get_embeddings():
     global _embeddings
     if _embeddings is None:
-        if not settings.openai_api_key:
-            raise RuntimeError("OPENAI_API_KEY is missing")
-        _embeddings = OpenAIEmbeddings(
-            model=settings.embedding_model,
-            api_key=settings.openai_api_key,
-        )
+        model_name = (settings.embedding_model or "sentence-transformers/all-MiniLM-L6-v2").strip()
+        if "all-minilm" in model_name.lower() and not model_name.startswith("sentence-transformers/"):
+            model_name = f"sentence-transformers/{model_name}"
+        _embeddings = HuggingFaceEmbeddings(model_name=model_name)
     return _embeddings
-
 
 
 def ensure_index():
@@ -83,7 +78,6 @@ def ensure_index():
     return pc.Index(settings.pinecone_index_name)
 
 
-
 def get_vectorstore():
     global _vectorstore
     if _vectorstore is None:
@@ -96,11 +90,8 @@ def get_vectorstore():
     return _vectorstore
 
 
-
 def get_retriever():
     return get_vectorstore().as_retriever(search_kwargs={"k": settings.top_k})
-
-
 
 
 def add_documents(chunks):
